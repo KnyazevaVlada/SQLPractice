@@ -44,6 +44,15 @@ FROM Trip
   JOIN Passenger ON Pass_in_trip.passenger = Passenger.id
 WHERE Passenger.name = "Bruce Willis";
 
+Выведите имена пассажиров улетевших в Москву (Moscow) на самолете TU-134
+SELECT DISTINCT name 
+FROM Passenger JOIN Pass_in_trip
+ON Pass_in_trip.passenger = Passenger.id
+JOIN Trip
+ON Trip.id = Pass_in_trip.trip 
+WHERE town_to = "Moscow" AND plane = "TU-134"
+;
+
 
 (БД Семья)
 
@@ -129,3 +138,12 @@ WHERE good_type_id NOT IN (
     WHERE YEAR(date) = '2005'
   );
 
+Узнать, сколько потрачено на каждую из групп товаров в 2005 году. Вывести название группы и сумму
+SELECT good_type_name, SUM(unit_price*amount) as costs
+FROM GoodTypes JOIN Goods
+ON GoodTypes.good_type_id = Goods.type 
+JOIN Payments
+ON Goods.good_id = Payments.good 
+WHERE YEAR(date) = '2005'
+GROUP BY good_type_name 
+;
