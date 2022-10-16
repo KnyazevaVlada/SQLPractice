@@ -1,0 +1,131 @@
+
+(БД Авиаперелеты)
+
+В какие города можно улететь из Парижа (Paris) и сколько времени это займёт?
+SELECT town_to,
+  TIMEDIFF(time_in, time_out) as flight_time
+FROM Trip
+WHERE town_from = "Paris"
+
+Вывести вылеты, совершенные с 10 ч. по 14 ч. 1 января 1900 г.
+Поля в результирующей таблице:
+SELECT *
+FROM Trip
+WHERE time_out BETWEEN "1900-01-01 10:00:00" AND "1900-01-01 14:00:00";
+
+Вывести имена людей, у которых есть полный тёзка среди пассажиров
+SELECT name
+FROM Passenger
+GROUP BY name
+HAVING COUNT (name) > 1;
+
+Вывести отсортированный по количеству перелетов (по убыванию) и имени (по возрастанию) список пассажиров, совершивших хотя бы 1 полет.
+SELECT name,
+  COUNT(trip) as count
+FROM Passenger
+  JOIN Pass_in_trip as Pas ON Passenger.id = Pas.passenger
+GROUP BY name
+HAVING COUNT(trip) >= 1
+ORDER BY count desc,
+  name;
+
+Выведите дату и время прилёта пассажира Стив Мартин (Steve Martin) в Лондон (London)
+SELECT time_in
+FROM Trip
+  JOIN Pass_in_trip ON Trip.id = Pass_in_trip.trip
+  JOIN Passenger ON Pass_in_trip.passenger = Passenger.id
+WHERE Passenger.name = "Steve Martin"
+  AND Trip.town_to = "London";
+
+В какие города летал Bruce Willis
+SELECT town_to
+FROM Trip
+  JOIN Pass_in_trip ON Trip.id = Pass_in_trip.trip
+  JOIN Passenger ON Pass_in_trip.passenger = Passenger.id
+WHERE Passenger.name = "Bruce Willis";
+
+
+(БД Семья)
+
+Определить, сколько потратил в 2005 году каждый из членов семьи
+SELECT member_name,
+  status,
+  SUM (amount * unit_price) as costs
+FROM FamilyMembers
+  JOIN Payments ON FamilyMembers.member_id = Payments.family_member
+WHERE YEAR(date) = 2005
+GROUP BY member_name,
+  status;
+
+Узнать, кто старше всех в семьe
+SELECT member_name
+FROM FamilyMembers
+WHERE birthday = (
+    SELECT MIN(birthday)
+    FROM FamilyMembers
+  );
+
+Сколько и кто из семьи потратил на развлечения (entertainment). Вывести статус в семье, имя, сумму
+SELECT status,
+  member_name,
+  SUM(amount * unit_price) as costs
+FROM FamilyMembers
+  JOIN Payments ON FamilyMembers.member_id = Payments.family_member
+  JOIN Goods ON Payments.good = Goods.good_id
+  JOIN GoodTypes ON GoodTypes.good_type_id = Goods.type
+WHERE good_type_name = 'entertainment'
+GROUP BY status,
+  member_name;
+
+Определить товары, которые покупали более 1 раза
+SELECT DISTINCT good_name
+FROM Goods as g
+  JOIN Payments as p ON p.good = g.good_id
+GROUP BY good
+HAVING COUNT(good) > 1;
+
+Найдите самый дорогой деликатес (delicacies) и выведите его стоимость
+SELECT good_name,
+  unit_price
+FROM Payments
+  JOIN Goods ON Payments.good = Goods.good_id
+  JOIN GoodTypes as gt ON Goods.type = gt.good_type_id
+WHERE Payments.unit_price = (
+    SELECT MAX(unit_price)
+    FROM Payments
+      JOIN Goods ON Payments.good = Goods.good_id
+      JOIN GoodTypes ON Goods.type = GoodTypes.good_type_id
+    WHERE good_type_name = 'delicacies'
+  );
+
+Определить кто и сколько потратил в июне 2005
+SELECT member_name,
+  SUM(amount * unit_price) as costs
+FROM FamilyMembers as fm
+  JOIN Payments as p ON fm.member_id = p.family_member
+WHERE MONTH(date) = '06'
+  AND YEAR(date) = '2005'
+GROUP BY member_name;
+
+Определить группы товаров, которые не приобретались в 2005 году
+SELECT good_type_name
+FROM GoodTypes
+WHERE good_type_id NOT IN (
+    SELECT good_type_id
+    FROM GoodTypes
+      JOIN Goods ON good_type_id = type
+      JOIN Payments ON good = good_id
+    WHERE YEAR(date) = '2005'
+  );
+
+Определить группы товаров, которые не приобретались в 2005 году
+SELECT good_type_name
+FROM GoodTypes
+WHERE good_type_id NOT IN (
+    SELECT good_type_id
+    FROM GoodTypes
+      JOIN Goods ON good_type_id = type
+      JOIN Payments ON good = good_id
+    WHERE YEAR(date) = '2005'
+  );
+
